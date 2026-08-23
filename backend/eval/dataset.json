@@ -1,0 +1,23 @@
+[
+  {
+    "id": "eval_backend_eng",
+    "resume_text": "Senior Backend Engineer with 5 years building scalable distributed microservices using Python, FastAPI, and PostgreSQL. Designed high-throughput caching layer with Redis, reducing p99 latency by 45%. Deployed containerized applications with Docker on AWS ECS.",
+    "query": "What database and caching technologies did the candidate use?",
+    "expected_keywords": ["PostgreSQL", "Redis"],
+    "should_be_grounded": true
+  },
+  {
+    "id": "eval_anti_hallucination",
+    "resume_text": "Frontend developer with 3 years experience in React, TypeScript, TailwindCSS, and Next.js. Focused on web performance and accessible design systems.",
+    "query": "Does the candidate have production experience managing Kubernetes clusters or Apache Kafka?",
+    "expected_keywords": ["not mentioned"],
+    "should_be_grounded": false
+  },
+  {
+    "id": "eval_data_skills",
+    "resume_text": "Machine Learning Engineer with strong proficiency in PyTorch, Scikit-learn, and HuggingFace Transformers. Built semantic search pipelines using vector embeddings.",
+    "query": "What machine learning libraries and frameworks are listed in the resume?",
+    "expected_keywords": ["PyTorch", "Scikit-learn", "Transformers"],
+    "should_be_grounded": true
+  }
+]
