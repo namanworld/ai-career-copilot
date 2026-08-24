@@ -1,9 +1,0 @@
-FastAPI
-pydantic
-python-dotenv
-faiss-cpu
-requests
-PyPDF2
-numpy
-scikit-learn
-transformers

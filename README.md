@@ -1,18 +1,19 @@
-# AI Career Copilot 🚀
+# AI Career Copilot 🚀 (.NET & C# Edition)
 
-> A production-ready, grounded **AI Career Copilot** that performs deterministic resume-to-job-description matching, tailored technical & behavioral interview generation, and strict grounded RAG Q&A.
+> A production-ready, grounded **AI Career Copilot** built 100% in **C# / ASP.NET Core** and **React**, performing deterministic resume-to-job-description matching, tailored technical & behavioral interview generation, and strict grounded RAG Q&A.
 
-Built to demonstrate modern AI/LLM engineering fundamentals (structured JSON outputs, FAISS vector search, prompt-injection defense, and evaluation metrics) without framework bloat.
+Built to demonstrate modern AI/LLM engineering in the .NET ecosystem: structured JSON schemas, in-memory Cosine Similarity vector search, prompt-injection defense, and xUnit test suites.
 
 ---
 
 ## 🌟 Highlights
 
-- **Anti-Hallucination & Grounded RAG:** Uses sliding-window chunking ($500$ words / $100$ word overlap), normalized FAISS vector indexing, and strict context grounding with citation detection.
-- **Structured Pydantic Outputs:** Reliable JSON schemas mapped directly to Pydantic models for scores, skill gaps, and interview prep.
-- **Prompt Injection Defense:** Input sanitization layer that neutralizes prompt override patterns (e.g. `ignore previous instructions`).
-- **Zero API Secrets in Source Code:** Configured strictly via `.env` with a comprehensive `.gitignore`.
-- **Built-in Automated Evaluation:** Includes [backend/eval/evaluate.py](backend/eval/evaluate.py) testing retrieval correctness and anti-hallucination accuracy.
+- **100% C# / ASP.NET Core Minimal APIs:** Built with native dependency injection, concurrent session management, and `System.Text.Json` deserialization.
+- **Anti-Hallucination & Grounded RAG:** Implements sliding-window chunking ($500$ words / $100$ word overlap), L2-normalized vector embeddings, and strict context grounding with citation detection.
+- **Structured Output Contracts:** Strongly-typed C# `record` models with `System.Text.Json` serialization guaranteeing deterministic API responses for the frontend.
+- **Prompt Injection Defense:** Regex-based sanitization layer in `PdfParserService.cs` neutralizing adversarial prompt override patterns (e.g., `ignore previous instructions`).
+- **Zero API Secrets in Source Code:** Configured strictly via `appsettings.json` / environment variables with a comprehensive `.gitignore`.
+- **Automated xUnit Testing:** Unit tests verifying input sanitization and sliding-window chunking algorithms.
 
 ---
 
@@ -26,13 +27,13 @@ Built to demonstrate modern AI/LLM engineering fundamentals (structured JSON out
                             │ REST API (JSON / Multipart)
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│                   FastAPI Backend                      │
+│             ASP.NET Core Minimal API Backend           │
 │ ┌────────────────────────────────────────────────────┐ │
-│ │  1. PDF Parser & Injection Defense (pypdf + regex) │ │
-│ │  2. Embedding Service (Gemini Embedding + FAISS)   │ │
-│ │  3. Analysis Service (Structured Gemini Output)    │ │
-│ │  4. Interview Service (Tailored Questions)         │ │
-│ │  5. RAG Retrieval Engine (Strict Grounded Q&A)     │ │
+│ │  1. PdfParserService (PdfPig + Injection Defense)  │ │
+│ │  2. VectorStoreService (Gemini Embeddings + Cosine)│ │
+│ │  3. AnalysisService (Structured Gemini Output)     │ │
+│ │  4. InterviewService (Tailored Questions Generator)│ │
+│ │  5. RagService (Strict Grounded Q&A)               │ │
 │ └────────────────────────────────────────────────────┘ │
 └───────────────────────────┬────────────────────────────┘
                             ▼
@@ -45,35 +46,32 @@ Built to demonstrate modern AI/LLM engineering fundamentals (structured JSON out
 
 ```text
 ai-career-copilot/
-├── backend/
-│   ├── app/
-│   │   ├── services/
-│   │   │   ├── analysis.py      # Match scoring & gap analysis
-│   │   │   ├── embedding.py     # Gemini embeddings + FAISS indexing
-│   │   │   ├── interview.py     # Tailored interview question generator
-│   │   │   ├── llm.py           # Gemini client with structured output
-│   │   │   ├── parser.py        # PDF text extraction & injection defense
-│   │   │   └── rag.py           # Grounded RAG retrieval & QA
-│   │   ├── config.py            # Environment settings
-│   │   ├── main.py              # FastAPI application routes
-│   │   └── schemas.py           # Pydantic validation schemas
-│   ├── eval/
-│   │   ├── dataset.json         # Evaluation benchmark dataset
-│   │   └── evaluate.py          # Groundedness & hallucination evaluator
-│   ├── tests/
-│   │   └── test_api.py          # API & sanitization unit tests
-│   ├── .env.example             # Environment template (NO SECRETS)
-│   ├── pytest.ini               # Test configuration
-│   └── requirements.txt         # Backend Python dependencies
+├── backend-dotnet/
+│   ├── Models/
+│   │   └── Schemas.cs             # C# record models for API & LLM contracts
+│   ├── Services/
+│   │   ├── AnalysisService.cs     # Match scoring & skill gap analysis
+│   │   ├── GeminiClientService.cs # HTTP Gemini integration & embeddings
+│   │   ├── InterviewService.cs    # Tailored interview question generator
+│   │   ├── PdfParserService.cs    # PdfPig extraction & prompt injection defense
+│   │   ├── RagService.cs          # Strict grounded RAG answer generator
+│   │   └── VectorStoreService.cs  # Sliding-window chunker & Cosine Similarity
+│   ├── appsettings.example.json   # Template settings (NO SECRETS)
+│   ├── appsettings.json          # Local config (ignored in git)
+│   ├── Program.cs                 # ASP.NET Core endpoints & DI registration
+│   └── AiCareerCopilot.Api.csproj # .NET 7/8/10 project definition
+├── backend-dotnet.Tests/
+│   ├── SecurityAndChunkingTests.cs# xUnit tests for sanitization & chunking
+│   └── backend-dotnet.Tests.csproj
 ├── frontend/
 │   ├── src/
-│   │   ├── App.css              # Clean, modern UI styling
-│   │   ├── App.jsx              # React single-page copilot app
-│   │   └── main.jsx             # React entry point
+│   │   ├── App.css                # Clean, modern UI styling
+│   │   ├── App.jsx                # React single-page copilot app
+│   │   └── main.jsx               # React entry point
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
-├── .gitignore                   # Security rules ignoring .env & node_modules
+├── .gitignore                     # Security rules ignoring appsettings.json, bin/, obj/
 └── README.md
 ```
 
@@ -82,41 +80,84 @@ ai-career-copilot/
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- **Python 3.10+**
+- **.NET 7 / 8 / 10 SDK** (`dotnet --version`)
 - **Node.js 18+** & npm
 - A **Google Gemini API Key** ([Google AI Studio](https://aistudio.google.com/app/apikey))
 
 ---
 
-### Step 1: Clone and Configure Environment
+### Step 1: Configure Backend Environment
 
 ```bash
-git clone <YOUR_GITHUB_REPO_URL>
-cd ai-career-copilot
+cd backend-dotnet
 
-# Create backend .env from template
-cp backend/.env.example backend/.env
+# Create appsettings.json from template
+cp appsettings.example.json appsettings.json
 ```
 
-Open `backend/.env` and paste your Gemini API key:
-```ini
-GEMINI_API_KEY=your_actual_gemini_api_key_here
-GEMINI_MODEL=models/gemini-3.6-flash
-EMBEDDING_MODEL=models/gemini-embedding-001
-MAX_RESUME_SIZE_MB=5
-CHUNK_SIZE=500
-CHUNK_OVERLAP=100
+Add your Gemini API key in `backend-dotnet/appsettings.json`:
+```json
+{
+  "GEMINI_API_KEY": "YOUR_ACTUAL_GEMINI_API_KEY_HERE",
+  "GEMINI_MODEL": "models/gemini-3.6-flash",
+  "EMBEDDING_MODEL": "models/gemini-embedding-001"
+}
 ```
 
 ---
 
-### Step 2: Start the Backend Server
+### Step 2: Start the .NET Backend API
 
 ```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+cd backend-dotnet
+dotnet run --urls "http://127.0.0.1:8000"
+```
+
+- **Health Check:** [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+
+---
+
+### Step 3: Start the Frontend UI
+
+Open a second terminal window:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- **Web Application:** [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 🧪 Running xUnit Tests
+
+```bash
+cd backend-dotnet.Tests
+dotnet test
+```
+
+---
+
+## 🔒 Security & Privacy
+
+- **No Secrets in Version Control:** `appsettings.json`, `.env`, and all credential files are explicitly ignored in `.gitignore`.
+- **Input Sanitization:** Regex filters in `PdfParserService` neutralize prompt injection vectors before passing data to LLM context.
+- **In-Memory Storage:** Candidate resumes are parsed and indexed per session in memory without persistent disk exposure.
+
+---
+
+## 💡 C# & AI Engineering Interview Talking Points
+
+1. **Why C# / ASP.NET Core for GenAI backends?**
+   - High throughput, native asynchronous programming (`Task`), compile-time type safety with `record` types, and modern vector calculation support.
+2. **How does Cosine Similarity vector search work in C#?**
+   - L2-normalized vectors mean the cosine similarity is the dot product of two embedding vectors:
+     $$\text{Cosine Similarity}(A, B) = \sum_{i=1}^n A_i \cdot B_i$$
+3. **Structured Outputs in C#:**
+   - Prompt instructions specify exact JSON schemas matching C# `record` definitions, and `System.Text.Json.JsonSerializer.Deserialize<T>()` provides type-safe deserialization.
+
 
 # Run FastAPI backend
 python -m uvicorn app.main:app --reload --port 8000
