@@ -8,12 +8,12 @@ Built to demonstrate modern AI/LLM engineering in the .NET ecosystem: structured
 
 ## 🌟 Highlights
 
+- **Dual-Index Grounded RAG & Custom Vectorizer:** Combines a session-scoped candidate resume index with a 50-rule hiring rubric knowledge base (`ResumeKnowledgeBase.json`), powered by our custom in-memory `DynamicCorpusVectorService` and Cosine Similarity search.
 - **100% C# / ASP.NET Core Minimal APIs:** Built with native dependency injection, concurrent session management, and `System.Text.Json` deserialization.
-- **Anti-Hallucination & Grounded RAG:** Implements sliding-window chunking ($500$ words / $100$ word overlap), L2-normalized vector embeddings, and strict context grounding with citation detection.
 - **Structured Output Contracts:** Strongly-typed C# `record` models with `System.Text.Json` serialization guaranteeing deterministic API responses for the frontend.
 - **Prompt Injection Defense:** Regex-based sanitization layer in `PdfParserService.cs` neutralizing adversarial prompt override patterns (e.g., `ignore previous instructions`).
 - **Zero API Secrets in Source Code:** Configured strictly via `appsettings.json` / environment variables with a comprehensive `.gitignore`.
-- **Automated xUnit Testing:** Unit tests verifying input sanitization and sliding-window chunking algorithms.
+- **Automated xUnit Testing:** Unit tests verifying vectorization, vocabulary learning, knowledge base retrieval, and prompt sanitization.
 
 ---
 
@@ -30,10 +30,11 @@ Built to demonstrate modern AI/LLM engineering in the .NET ecosystem: structured
 │             ASP.NET Core Minimal API Backend           │
 │ ┌────────────────────────────────────────────────────┐ │
 │ │  1. PdfParserService (PdfPig + Injection Defense)  │ │
-│ │  2. VectorStoreService (Gemini Embeddings + Cosine)│ │
-│ │  3. AnalysisService (Structured Gemini Output)     │ │
-│ │  4. InterviewService (Tailored Questions Generator)│ │
-│ │  5. RagService (Strict Grounded Q&A)               │ │
+│ │  2. DynamicCorpusVectorService (In-memory TF + L2) │ │
+│ │  3. KnowledgeBaseService (50 Curated Hiring Rules) │ │
+│ │  4. VectorStoreService (Gemini Embeddings + Cosine)│ │
+│ │  5. AnalysisService (Structured Gemini Output)     │ │
+│ │  6. RagService (Dual-Index Candidate + KB RAG)     │ │
 │ └────────────────────────────────────────────────────┘ │
 └───────────────────────────┬────────────────────────────┘
                             ▼
@@ -47,20 +48,25 @@ Built to demonstrate modern AI/LLM engineering in the .NET ecosystem: structured
 ```text
 ai-career-copilot/
 ├── backend-dotnet/
+│   ├── Data/
+│   │   └── ResumeKnowledgeBase.json # 50 curated rules (Google XYZ, banned words, metrics)
 │   ├── Models/
 │   │   └── Schemas.cs             # C# record models for API & LLM contracts
 │   ├── Services/
-│   │   ├── AnalysisService.cs     # Match scoring & skill gap analysis
+│   │   ├── DynamicCorpusVectorService.cs # Pure C# dynamic vocabulary & vectorizer
+│   │   ├── KnowledgeBaseService.cs# In-memory knowledge base RAG indexer
+│   │   ├── AnalysisService.cs     # Match scoring & rubric-calibrated gap analysis
 │   │   ├── GeminiClientService.cs # HTTP Gemini integration & embeddings
 │   │   ├── InterviewService.cs    # Tailored interview question generator
 │   │   ├── PdfParserService.cs    # PdfPig extraction & prompt injection defense
-│   │   ├── RagService.cs          # Strict grounded RAG answer generator
+│   │   ├── RagService.cs          # Dual-Index grounded RAG answer generator
 │   │   └── VectorStoreService.cs  # Sliding-window chunker & Cosine Similarity
 │   ├── appsettings.example.json   # Template settings (NO SECRETS)
 │   ├── appsettings.json          # Local config (ignored in git)
 │   ├── Program.cs                 # ASP.NET Core endpoints & DI registration
 │   └── AiCareerCopilot.Api.csproj # .NET 7/8/10 project definition
 ├── backend-dotnet.Tests/
+│   ├── KnowledgeBaseAndVectorTests.cs # xUnit tests for vectorizer & knowledge retrieval
 │   ├── SecurityAndChunkingTests.cs# xUnit tests for sanitization & chunking
 │   └── backend-dotnet.Tests.csproj
 ├── frontend/
@@ -74,6 +80,7 @@ ai-career-copilot/
 ├── .gitignore                     # Security rules ignoring appsettings.json, bin/, obj/
 └── README.md
 ```
+
 
 ---
 

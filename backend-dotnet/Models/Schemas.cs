@@ -49,3 +49,21 @@ public record AnalyzeEndpointResponse(
     [property: JsonPropertyName("session_id")] string SessionId,
     [property: JsonPropertyName("analysis")] AnalysisResponse Analysis
 );
+
+public record KnowledgeChunk(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("category")] string Category,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("text")] string Text,
+    [property: JsonPropertyName("tags")] List<string> Tags,
+    [property: JsonPropertyName("seniority")] List<string> Seniority,
+    [property: JsonPropertyName("severity")] string Severity
+);
+
+public record KnowledgeBaseDocument(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("description")] string Description,
+    [property: JsonPropertyName("governing_principle")] string GoverningPrinciple,
+    [property: JsonPropertyName("chunks")] List<KnowledgeChunk> Chunks
+);
+

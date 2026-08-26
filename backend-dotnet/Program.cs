@@ -19,10 +19,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IPdfParserService, PdfParserService>();
 builder.Services.AddSingleton<IGeminiClientService, GeminiClientService>();
+builder.Services.AddSingleton<IDynamicCorpusVectorService, DynamicCorpusVectorService>();
+builder.Services.AddSingleton<IKnowledgeBaseService, KnowledgeBaseService>();
 builder.Services.AddSingleton<IVectorStoreService, VectorStoreService>();
 builder.Services.AddSingleton<IAnalysisService, AnalysisService>();
 builder.Services.AddSingleton<IInterviewService, InterviewService>();
 builder.Services.AddSingleton<IRagService, RagService>();
+
 
 // In-memory active session store
 var sessionStore = new ConcurrentDictionary<string, (string ResumeText, string JobDescription)>();
@@ -121,5 +124,25 @@ app.MapPost("/api/rag-query", async (
     return Results.Ok(result);
 });
 
+// 4. Knowledge Base Search Endpoint
+app.MapGet("/api/knowledge-base/search", (
+    [FromQuery] string q,
+    IKnowledgeBaseService knowledgeBase,
+    [FromQuery] int? topK) =>
+{
+    var limit = topK ?? 3;
+    var matches = knowledgeBase.SearchKnowledgeBase(q, limit);
+    return Results.Ok(matches);
+});
+
+
+// 5. Knowledge Base All Rules Endpoint
+app.MapGet("/api/knowledge-base/rules", (IKnowledgeBaseService knowledgeBase) =>
+{
+    var chunks = knowledgeBase.GetAllChunks();
+    return Results.Ok(new { count = chunks.Count, rules = chunks });
+});
+
 app.Run();
+
 

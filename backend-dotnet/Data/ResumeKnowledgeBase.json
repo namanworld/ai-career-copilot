@@ -1,0 +1,802 @@
+{
+  "schema_version": "1.0.0",
+  "name": "ResumeKnowledgeBase",
+  "description": "Retrieval corpus for resume bullet evaluation and rewriting. Each entry in `chunks` is self-contained: it states a rule, explains why it exists, and in almost all cases carries a concrete example inline, so it remains useful when retrieved in isolation without neighbouring chunks.",
+  "domain_bias": "Software engineering, weighted toward backend and distributed systems. Examples use that vocabulary but the rules generalise.",
+  "governing_principle": "Never make a resume sound impressive at the expense of sounding true. Specific, technically grounded, interview-defensible writing beats polished language every time.",
+  "chunk_conventions": {
+    "self_contained": "No chunk refers to another chunk by position or with phrases like 'as described above'.",
+    "target_length_words": "75-120, verified across the corpus. Comfortably inside a 500-word sliding window with 100-word overlap, so no rule is ever split from its example.",
+    "id_format": "<category-prefix>-<zero-padded-index>",
+    "retrieval_fields": "Embed the concatenation of `title` + `text`. Use `tags`, `category` and `seniority` as metadata filters, not as embedded text.",
+    "seniority_values": [
+      "all",
+      "junior",
+      "mid",
+      "senior"
+    ],
+    "severity_values": [
+      "blocker",
+      "major",
+      "minor",
+      "guidance"
+    ],
+    "examples": "Rule and example chunks carry at least one concrete example inline. Three chunks (sen-004, ver-003, ver-004) are principle or checklist chunks where an example would add nothing."
+  },
+  "categories": {
+    "bullet_rules": "Rules governing how a single bullet point is constructed.",
+    "banned_vocabulary": "Words and phrases that signal inflation or AI-generated filler.",
+    "good_vs_bad": "Concrete before/after transformations with the reasoning made explicit.",
+    "xyz_pattern": "The Google 'Accomplished X, as measured by Y, by doing Z' formula and its limits.",
+    "metrics_and_evidence": "When a number may be used, and what makes it defensible.",
+    "seniority_rubric": "What junior, mid and senior bullets are expected to demonstrate.",
+    "verification": "Tests applied to a finished bullet before it ships."
+  },
+  "chunks": [
+    {
+      "id": "rule-001",
+      "category": "bullet_rules",
+      "title": "Never invent information",
+      "text": "Do not invent metrics, percentages, scale, user counts, traffic figures, cost savings, latency improvements, business impact, technologies, ownership, architecture decisions or leadership responsibilities. If a metric is unknown, omit it or use an explicitly approximate value only when the engineer has supplied enough basis for the approximation. A bullet that reads 'Reduced API latency by 40%' when nobody measured the baseline is not a strong bullet, it is an unverifiable claim that collapses in the first technical interview. The correct move when a number is missing is to describe the engineering work precisely and stop: 'Added Redis caching for frequently accessed configuration data to reduce repeated database reads.' That sentence is complete, technical and true without a number attached.",
+      "tags": [
+        "fabrication",
+        "metrics",
+        "truthfulness"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "rule-002",
+      "category": "bullet_rules",
+      "title": "Match the verb to the actual level of responsibility",
+      "text": "Ownership verbs carry specific claims and a reviewer will test them. Use 'architected' only when the person genuinely made the architecture and design decisions. Use 'led' only when they led people or led the technical effort. Use 'owned' only where there was meaningful ownership. Use 'spearheaded' only when they initiated and drove the work. Use 'designed' only when they designed rather than implemented someone else's design. An engineer who implemented a design handed to them should write 'Implemented', not 'Designed'. This is not modesty, it is accuracy: a hiring manager who asks 'walk me through the design trade-offs you considered' will immediately expose an inflated verb, and the damage extends to every other claim on the page.",
+      "tags": [
+        "ownership",
+        "verbs",
+        "inflation"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "rule-003",
+      "category": "bullet_rules",
+      "title": "Prefer concrete engineering verbs",
+      "text": "Prefer plain, concrete verbs that name the actual work: built, implemented, designed, developed, migrated, refactored, debugged, automated, deployed, reduced, improved, added, replaced, integrated, investigated, resolved, optimized, monitored. Avoid substituting a more sophisticated-sounding verb for a simple one. Do not replace 'built' with 'leveraged' to sound more professional; 'leveraged' describes nothing an engineer did. 'Built a FastAPI service backed by PostgreSQL' tells a reader what happened. 'Leveraged modern Python frameworks to deliver a service' tells them nothing and reads as filler. The concrete verb is almost always the correct verb.",
+      "tags": [
+        "verbs",
+        "voice",
+        "clarity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-004",
+      "category": "bullet_rules",
+      "title": "Use active voice with the engineer as the subject",
+      "text": "Every bullet should have the engineer as the implied subject performing the action. Passive constructions hide who did the work, which is precisely the information a resume exists to convey. 'A caching layer was added to the configuration service' leaves open whether the writer built it, reviewed it, or watched someone else build it. 'Added a caching layer to the configuration service' answers that. Watch for passive markers: 'was implemented', 'were developed', 'has been deployed', 'is responsible for'. Also avoid the nominalised passive, where the verb becomes a noun: 'Responsible for the implementation of X' should be 'Implemented X'.",
+      "tags": [
+        "voice",
+        "passive",
+        "clarity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-005",
+      "category": "bullet_rules",
+      "title": "Never use adjectives in place of evidence",
+      "text": "Adjectives asserting quality are not evidence and a reader discounts them automatically. 'Built a highly scalable and robust service' asserts scalability without demonstrating it. Replace the adjective with the fact that implies it: 'Built a service handling 2M requests/day across 12 instances.' If the actual scale is unknown, describe the shape of the system rather than reaching for an adjective: 'Built a service for processing asynchronous requests across multiple backend instances.' The test is simple. Remove every adjective from the bullet. If what remains is still informative, the bullet was carrying real content. If it collapses into nothing, the adjectives were doing work that facts should have done.",
+      "tags": [
+        "adjectives",
+        "evidence",
+        "scalability"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-006",
+      "category": "bullet_rules",
+      "title": "Every technology mentioned needs a reason for being there",
+      "text": "Do not list technologies inside experience bullets as a keyword dump. 'Used Python, FastAPI, Redis, PostgreSQL and Docker' tells a reader that five words appeared in a job description, not what the engineer did. Each technology should appear because it was relevant to the specific work being described: 'Built a FastAPI service backed by PostgreSQL and Redis for request processing.' Now Redis and PostgreSQL have roles in a sentence. A separate skills section is the correct home for breadth; experience bullets are the home for applied depth. If a technology cannot be attached to a verb and an outcome, move it to the skills section or drop it.",
+      "tags": [
+        "technologies",
+        "keyword-stuffing",
+        "skills-section"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-007",
+      "category": "bullet_rules",
+      "title": "Structure around problem, action, result where it helps",
+      "text": "Where the engineering problem is not self-evident, structure the bullet as problem then action then result: 'Reduced repeated database reads by adding Redis caching for frequently accessed configuration data.' The reader learns what was wrong, what was done, and what changed. Do not force this structure when the work already speaks for itself. 'Migrated the build pipeline from Jenkins to GitHub Actions' needs no framing, and padding it with a manufactured problem statement weakens it. Use the structure as a tool for clarity, not as a template applied uniformly to every line.",
+      "tags": [
+        "structure",
+        "problem-action-result",
+        "clarity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "rule-008",
+      "category": "bullet_rules",
+      "title": "Do not manufacture impact",
+      "text": "Never append generic consequence clauses to a bullet: 'resulting in improved user experience', 'improving system reliability', 'enhancing scalability', 'driving business value'. These phrases are added because a bullet feels unfinished, not because the consequence is known. If the actual result is known, state it specifically: 'cutting nightly job runtime from 6 hours to 90 minutes'. If it is not known, stop the bullet after describing the work. A bullet that ends on a concrete engineering action is complete. A bullet that ends on an invented outcome is weaker than one that ends early, because the invented outcome is the part an interviewer will probe first.",
+      "tags": [
+        "impact",
+        "fabrication",
+        "filler"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "rule-009",
+      "category": "bullet_rules",
+      "title": "Do not turn ordinary work into architecture",
+      "text": "Resist the urge to elevate routine engineering into grand-sounding initiatives. 'Fixed a race condition in the session handler' should not become 'Engineered a sophisticated concurrency-management framework'. 'Added caching' should not become 'Architected a highly resilient distributed caching ecosystem'. The inflated version is both less informative and less credible: an experienced reader knows what adding caching looks like, and the mismatch between the language and the work signals that the writer is overselling. Describe the actual engineering work at its actual size. A well-described bug fix reads better than a badly disguised one.",
+      "tags": [
+        "inflation",
+        "scope",
+        "credibility"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-010",
+      "category": "bullet_rules",
+      "title": "Vary sentence structure naturally",
+      "text": "Do not make every bullet follow the same shape. A page where every line reads 'Designed X using Y, resulting in Z' is visibly templated and reads as machine-generated. Vary the opening naturally across the section: 'Built X using Y...', 'Migrated X from A to B...', 'Investigated intermittent failures in X and...', 'Added X to support...', 'Reduced X by...', 'Refactored X to...'. This is not about introducing artificial randomness. It is that real work varies in shape, and describing each piece of work in the form that fits it produces natural variation as a by-product.",
+      "tags": [
+        "structure",
+        "variation",
+        "ai-detection"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "minor"
+    },
+    {
+      "id": "rule-011",
+      "category": "bullet_rules",
+      "title": "Keep bullets to one accomplishment",
+      "text": "Each bullet should communicate one meaningful engineering accomplishment, in roughly one to two lines, with one primary idea and minimal filler. Do not combine five unrelated accomplishments into a single sentence joined by commas and 'and'. A bullet reading 'Built the ingestion service, migrated the database, improved CI times, mentored two interns and wrote the design doc' forces a reader to parse five claims at once and gives none of them room to land. Split them, then cut the weakest. A section of four sharp bullets is stronger than one of six crowded ones.",
+      "tags": [
+        "length",
+        "focus",
+        "structure"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-012",
+      "category": "bullet_rules",
+      "title": "Preserve technical imperfections and constraints",
+      "text": "Do not make every project sound perfectly designed. Real engineering involves trade-offs, constraints, existing systems, legacy components, compatibility problems, operational limits, incremental migrations and deliberate workarounds. Mentioning these makes a bullet more credible, not less: 'Delivered a Spark upgrade with zero breaking changes across dependent pipelines' is stronger than 'Delivered a Spark upgrade' precisely because it names the constraint that made the work hard. 'Migrated legacy public IPs to service-tagged-only across three sovereign clouds' communicates real-world messiness that a sanitised version would hide. Constraints are evidence of engineering judgment.",
+      "tags": [
+        "constraints",
+        "trade-offs",
+        "credibility"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "rule-013",
+      "category": "bullet_rules",
+      "title": "Never write like a job description",
+      "text": "A resume records what an engineer changed, not what they were assigned. 'Responsible for developing and maintaining backend services' is a job description: it describes a role definition that would be identical for every person who ever held the position. Replace it with what this specific person actually did: 'Implemented backend APIs for order fulfilment and added idempotency handling to support partner retries.' The test is whether the sentence could be lifted verbatim into a job posting. If it could, it is describing a role rather than a person, and it should be rewritten around specific delivered work.",
+      "tags": [
+        "job-description",
+        "specificity",
+        "responsibilities"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-014",
+      "category": "bullet_rules",
+      "title": "Prefer technical nouns over quality adjectives",
+      "text": "Concrete technical nouns carry more information than adjectives describing quality. Prefer 'Service Fabric cluster with separate frontend and backend node types' over 'highly scalable and robust cloud infrastructure'. Prefer 'ClickHouse query using pre-aggregation and filtering' over 'highly optimized analytical solution'. The noun-based version tells a reader exactly what exists and lets them judge the quality themselves, which is what technical readers prefer to do. The adjective-based version asks them to accept an assessment from a source with an obvious interest in the answer.",
+      "tags": [
+        "nouns",
+        "adjectives",
+        "specificity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "rule-015",
+      "category": "bullet_rules",
+      "title": "Do not over-explain familiar technologies",
+      "text": "A resume is not documentation. Never explain what a mainstream technology is: 'Used C#, an object-oriented programming language' wastes a line and signals unfamiliarity with the audience. Name the technology in the context of the accomplishment and move on. The exception is genuinely obscure internal or domain-specific tooling, where a four-word gloss can help: 'Bicep (Azure infrastructure-as-code)'. Even then, keep it to a parenthetical. Assume the reader is an engineer who knows the field.",
+      "tags": [
+        "technologies",
+        "audience",
+        "brevity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "minor"
+    },
+    {
+      "id": "rule-016",
+      "category": "bullet_rules",
+      "title": "Do not make every bullet sound impressive",
+      "text": "A real engineering resume contains different kinds of work: feature development, bug fixes, performance improvements, migrations, infrastructure work, debugging, reliability work, automation, design and operational improvements. Not all of it is transformative and it should not be dressed up as though it were. A section where every line claims a major initiative reads as inflated, and it also flattens the signal: if everything is a headline, a reader cannot tell which item actually mattered. Let ordinary work be described as ordinary work. The contrast makes the genuinely significant items stand out.",
+      "tags": [
+        "inflation",
+        "variety",
+        "signal"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "vocab-001",
+      "category": "banned_vocabulary",
+      "title": "Corporate and AI-generated vocabulary to avoid",
+      "text": "Avoid unnecessary use of: leveraged, utilized, harnessed, spearheaded, orchestrated, championed, pioneered, revolutionized, transformed, streamlined, synergized, cutting-edge, best-in-class, world-class, robust, seamless, innovative, transformative, mission-critical, results-driven. These words appear when a writer is reaching for impressiveness rather than describing work, and they are strongly associated with generated text. They may be used only where they communicate something specific and true: 'orchestrated' is correct when describing a workflow orchestrator; 'mission-critical' is defensible when the system genuinely carries a tier-0 designation. In every other case, replace the word with the plain verb or delete it. 'Utilized' is always 'used'. 'Leveraged' is almost always 'used' or 'built with'.",
+      "tags": [
+        "banned-words",
+        "corporate-speak",
+        "ai-detection"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "vocab-002",
+      "category": "banned_vocabulary",
+      "title": "Drop 'successfully' and other empty intensifiers",
+      "text": "Never write 'Successfully implemented', 'Successfully migrated' or 'Successfully delivered'. The accomplishment itself implies success; nobody lists their failed migrations. The word adds length without information and draws attention to the possibility of failure. The same applies to other empty intensifiers: 'effectively', 'efficiently' and 'seamlessly' when unsupported by a measurement. 'Seamlessly migrated the database' should be either 'Migrated the database' or, if the seamlessness is the point and is real, 'Migrated the database with no downtime', which is a checkable claim rather than an adverb.",
+      "tags": [
+        "banned-words",
+        "intensifiers",
+        "brevity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "minor"
+    },
+    {
+      "id": "vocab-003",
+      "category": "banned_vocabulary",
+      "title": "Avoid generic professional summaries",
+      "text": "Do not write summaries built from adjectives: 'Results-driven Software Engineer with a proven track record of delivering innovative, scalable solutions.' This sentence contains no verifiable information and could belong to any engineer at any level. If a summary is included at all, it should describe actual technical experience in concrete terms: 'Software engineer with 4 years building backend services and cloud infrastructure using C#, .NET, Azure and distributed data systems.' Only include technologies and durations that are true. A summary earns its space by orienting the reader to a specific profile, not by asserting qualities.",
+      "tags": [
+        "summary",
+        "adjectives",
+        "specificity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "metric-001",
+      "category": "metrics_and_evidence",
+      "title": "A metric must be defensible on five points",
+      "text": "Include a metric only if the engineer can explain what was measured, how it was measured, what the baseline was, what changed, and how the improvement was calculated. If any of the five is missing, the metric is not defensible and should be cut. This is not a stylistic preference: an interviewer who asks 'how did you measure that?' about an undefendable number converts a strength into a credibility problem. When the five points are available the metric becomes one of the strongest things on the page, because it demonstrates the engineer instrumented their own work.",
+      "tags": [
+        "metrics",
+        "defensibility",
+        "interview"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "metric-002",
+      "category": "metrics_and_evidence",
+      "title": "Prefer absolute measurements over unexplained percentages",
+      "text": "Prefer 'Reduced p95 latency from ~800ms to ~500ms' over 'Improved performance by 37%'. The absolute version names the metric (p95 latency), gives the baseline and the result, and lets the reader compute the improvement themselves. The percentage version hides all three and invites the question 'percent of what, measured how?'. Percentages are acceptable when the underlying quantity is stated: 'Cut payload size 60-70% by replacing JSON with Protocol Buffers and LZ4' works because the quantity being reduced is explicit and the mechanism explains why the reduction is plausible.",
+      "tags": [
+        "metrics",
+        "percentages",
+        "latency"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "metric-003",
+      "category": "metrics_and_evidence",
+      "title": "Scale figures are evidence, not decoration",
+      "text": "Numbers describing the environment an engineer worked in are legitimate and useful even when no improvement is claimed: '~2.15B requests/day', '~1B notifications/day', 'across 42K tenants', '24 scale units across 3 sovereign clouds'. These are facts about the system, not claims about the engineer's impact, so they carry a lower burden of proof than improvement metrics. They are valuable because they calibrate the reader's sense of the operating environment, which is often the difference between a bullet reading as routine and reading as substantial. Use approximation markers ('~', 'roughly') where the figure is an order-of-magnitude estimate rather than a measured value.",
+      "tags": [
+        "metrics",
+        "scale",
+        "context"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "metric-004",
+      "category": "metrics_and_evidence",
+      "title": "When no metric exists, end on the engineering",
+      "text": "The absence of a number is not a defect to be papered over. A bullet may legitimately end on the technical action: 'Enforced typed request and response contracts with JSON schema validation to eliminate parse failures on model output.' No percentage appears, yet the bullet is specific, technical and fully defensible: the mechanism is named and the failure mode it addresses is named. Compare this to the same bullet with an invented figure appended, which would be weaker in every respect that matters. When choosing between a vague number and no number, always choose no number.",
+      "tags": [
+        "metrics",
+        "fabrication",
+        "alternatives"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "xyz-001",
+      "category": "xyz_pattern",
+      "title": "The XYZ formula and what it is for",
+      "text": "The Google XYZ pattern is 'Accomplished [X], as measured by [Y], by doing [Z]'. X is the outcome, Y is the measurement that proves it, Z is the technical mechanism. Worked example: 'Cut nightly reconciliation runtime (X) from 6 hours to 90 minutes (Y) by replacing per-row lookups with a pre-aggregated ClickHouse table (Z).' The pattern's value is that it forces the writer to supply a measurement and a mechanism rather than an assertion. Its risk is that it becomes a template applied to every line, producing a uniform page. Use it where a genuine measured outcome exists.",
+      "tags": [
+        "xyz",
+        "google",
+        "structure"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "xyz-002",
+      "category": "xyz_pattern",
+      "title": "The Z is the part engineers are hired on",
+      "text": "In the XYZ formula, engineers routinely under-invest in Z, the mechanism. A bullet reading 'Reduced page load time by 30% by optimizing the frontend' has an X and a Y but a Z that explains nothing. A technical reader wants to know which optimisation: 'by deferring third-party scripts and inlining critical CSS'. The Z is where engineering judgment shows, and it is what the interviewer will actually ask about. If Z cannot be stated specifically, the writer likely does not remember the work well enough to defend the bullet, which is a signal to simplify or drop it.",
+      "tags": [
+        "xyz",
+        "mechanism",
+        "specificity"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "xyz-003",
+      "category": "xyz_pattern",
+      "title": "XYZ with an unknown Y",
+      "text": "When the outcome is real but was never measured, do not invent a Y to complete the pattern. Collapse to X and Z instead: 'Removed a class of duplicate-charge failures by making the payment submission endpoint idempotent on a client-supplied key.' The outcome and the mechanism are both present and both true; only the measurement is absent, and its absence is honest. This is a stronger bullet than the same sentence with 'reducing payment errors by 25%' bolted on, because the invented figure is the first thing an interviewer will probe and the only part that cannot survive.",
+      "tags": [
+        "xyz",
+        "missing-metrics",
+        "fabrication"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "xyz-004",
+      "category": "xyz_pattern",
+      "title": "Do not reorder XYZ into a formula that hides the work",
+      "text": "The XYZ ordering is flexible and the natural English ordering is often Z-first: 'By migrating session storage from sticky instances to Redis, cut failed logins during deploys from ~4% to under 0.1%.' What matters is that all three components are present and identifiable, not that they appear in a fixed order. Rigidly opening every bullet with the outcome produces a page where each line starts with a verb of achievement, which reads as templated. Choose the ordering that puts the most informative element first for that particular piece of work.",
+      "tags": [
+        "xyz",
+        "ordering",
+        "variation"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "minor"
+    },
+    {
+      "id": "xyz-005",
+      "category": "xyz_pattern",
+      "title": "XYZ does not apply to every kind of engineering work",
+      "text": "Some legitimate work has no measurable outcome and forcing XYZ onto it produces distortion. Migrations delivered without incident, security posture changes, upgrades that unblock other teams, and design or review contributions often have no clean Y. For these, describe the work and the constraint that made it non-trivial: 'Re-authored Bicep network templates for 3 Service Fabric node types across 24 scale units and 3 sovereign clouds, moving legacy public IPs to service-tagged-only.' The scope and constraints supply the substance that a measurement would otherwise have provided.",
+      "tags": [
+        "xyz",
+        "limits",
+        "migrations"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "gvb-001",
+      "category": "good_vs_bad",
+      "title": "Before and after: keyword dump to applied work",
+      "text": "Bad: 'Used Python, FastAPI, Redis, PostgreSQL and Docker to build enterprise-grade solutions.' Good: 'Built a FastAPI service backed by PostgreSQL, with Redis caching for frequently accessed configuration data.' The bad version lists five technologies without attaching any of them to work, and closes on an empty adjective phrase. The good version gives each technology a role: PostgreSQL is the backing store, Redis serves a named caching purpose. The reader can now form a mental picture of the system and ask a sensible follow-up question, which is the point of the bullet.",
+      "tags": [
+        "before-after",
+        "technologies",
+        "keyword-stuffing"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-002",
+      "category": "good_vs_bad",
+      "title": "Before and after: adjective claim to measured fact",
+      "text": "Bad: 'Built a highly scalable and robust microservices architecture.' Good: 'Built six services behind an API gateway, handling ~40K requests/minute at peak with per-service circuit breakers.' The bad version asserts two qualities and demonstrates neither. The good version names the shape of the system, gives a throughput figure that establishes scale, and names the specific resilience mechanism, which is what 'robust' was gesturing at. Every adjective in the bad version has been replaced by a fact that implies it.",
+      "tags": [
+        "before-after",
+        "adjectives",
+        "scalability"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-003",
+      "category": "good_vs_bad",
+      "title": "Before and after: inflated ownership to accurate ownership",
+      "text": "Bad: 'Architected and spearheaded a company-wide observability transformation.' Good: 'Migrated production logging to a new platform, extending retention to 30 days and cutting time-to-first-signal during incidents.' The bad version claims two things the engineer probably cannot defend, architecture ownership and initiative across a company, and hides the actual work behind the word 'transformation'. The good version names the concrete change, the specific improvement in retention, and the operational benefit. It is a smaller claim and a much stronger bullet.",
+      "tags": [
+        "before-after",
+        "ownership",
+        "inflation"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "gvb-004",
+      "category": "good_vs_bad",
+      "title": "Before and after: job description to delivered work",
+      "text": "Bad: 'Responsible for developing and maintaining backend services and ensuring high availability.' Good: 'Implemented order-status APIs and added retry-with-backoff handling for a flaky downstream provider, removing a recurring source of on-call pages.' The bad version is a role definition, identical for anyone who has held the job. The good version names what this person built, the specific reliability problem they addressed, and the operational consequence. Note that the consequence here is real and specific rather than a generic 'improving reliability' clause.",
+      "tags": [
+        "before-after",
+        "job-description",
+        "specificity"
+      ],
+      "seniority": [
+        "junior",
+        "mid"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-005",
+      "category": "good_vs_bad",
+      "title": "Before and after: unexplained percentage to defensible measurement",
+      "text": "Bad: 'Improved system performance by 45%.' Good: 'Reduced p95 checkout latency from ~800ms to ~440ms by batching inventory lookups into a single call.' The bad version names no metric, no baseline and no mechanism, so the number is unverifiable and the interviewer's first question will be one the candidate cannot answer. The good version names the percentile, the operation, the before and after values, and the change that produced them. The improvement happens to be about 45%, but stating it as absolutes makes it checkable.",
+      "tags": [
+        "before-after",
+        "metrics",
+        "latency"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-006",
+      "category": "good_vs_bad",
+      "title": "Before and after: manufactured impact removed",
+      "text": "Bad: 'Refactored the notification module using modern design patterns, resulting in improved user experience and enhanced scalability.' Good: 'Refactored the notification module to separate template rendering from delivery, so new channels could be added without touching send logic.' The bad version closes with two invented consequences and describes the refactor only as 'using modern design patterns', which says nothing. The good version names what was actually separated and what that separation enables. The benefit stated is a real property of the change rather than an aspiration attached to it.",
+      "tags": [
+        "before-after",
+        "impact",
+        "refactoring"
+      ],
+      "seniority": [
+        "junior",
+        "mid"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "gvb-007",
+      "category": "good_vs_bad",
+      "title": "Before and after: passive voice to active ownership",
+      "text": "Bad: 'A CI/CD pipeline was implemented and deployment times were significantly reduced.' Good: 'Replaced the nightly manual release with a GitHub Actions pipeline, taking deploys from a ~2 hour manual process to under 15 minutes.' The bad version hides the actor twice and leans on 'significantly' in place of a figure. The good version establishes who did it, what the previous state was, what replaced it, and the actual change in duration. The before-state is doing real work here: without it, 'under 15 minutes' means nothing.",
+      "tags": [
+        "before-after",
+        "passive",
+        "ci-cd"
+      ],
+      "seniority": [
+        "junior",
+        "mid"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-008",
+      "category": "good_vs_bad",
+      "title": "Before and after: bug fix described honestly",
+      "text": "Bad: 'Engineered a sophisticated concurrency-management framework to eliminate systemic instability.' Good: 'Investigated intermittent 500s under load and fixed a race condition in connection-pool checkout that surfaced only above ~200 concurrent requests.' The bad version inflates a bug fix into a framework and replaces the specific fault with 'systemic instability'. The good version describes the investigation, names the actual defect, and gives the condition under which it appeared. This reads as an engineer who debugged something hard, which is exactly the impression the inflated version was trying and failing to create.",
+      "tags": [
+        "before-after",
+        "debugging",
+        "inflation"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "gvb-009",
+      "category": "good_vs_bad",
+      "title": "Before and after: migration with the constraint restored",
+      "text": "Bad: 'Successfully led a seamless database migration with zero issues.' Good: 'Migrated 40+ services from a shared MySQL instance to per-service schemas in phases, keeping dual writes during cutover so no service required a coordinated deploy.' The bad version uses 'successfully' and 'seamless', claims leadership that may not be accurate, and describes none of the work. The good version gives the scope, the phasing, the dual-write mechanism and the constraint it was solving. The difficulty of the work is now visible, which the word 'seamless' was actively concealing.",
+      "tags": [
+        "before-after",
+        "migrations",
+        "constraints"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-010",
+      "category": "good_vs_bad",
+      "title": "Before and after: AI and LLM work described concretely",
+      "text": "Bad: 'Leveraged cutting-edge GenAI to deliver transformative AI-powered capabilities.' Good: 'Built a shared LLM agent routing GenAI and Skills inference onto one path, flag-gated per tenant with automatic fallback and request-level provenance logging.' The bad version contains four inflated words and zero engineering. The good version names the routing behaviour, the rollout mechanism, the failure handling and the auditability requirement, all of which are things an interviewer can probe and the candidate can discuss. LLM work is especially prone to inflated language, which makes concrete description unusually differentiating.",
+      "tags": [
+        "before-after",
+        "llm",
+        "ai",
+        "inflation"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-011",
+      "category": "good_vs_bad",
+      "title": "Before and after: combined bullet split apart",
+      "text": "Bad: 'Built the ingestion service, migrated the database, improved CI times, mentored two interns and authored the design document.' Good, as two bullets: 'Built the event ingestion service handling ~15K events/second, with at-least-once delivery and idempotent consumers.' and 'Cut CI feedback time from ~25 to ~8 minutes by parallelising the test suite and caching dependency installs.' The bad version crams five claims into one line so none of them registers. The good version keeps the two strongest, gives each room to carry detail, and drops the rest rather than listing them for completeness.",
+      "tags": [
+        "before-after",
+        "focus",
+        "length"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "gvb-012",
+      "category": "good_vs_bad",
+      "title": "Before and after: summary rewritten as fact",
+      "text": "Bad: 'Results-driven, detail-oriented Software Engineer with a proven track record of architecting innovative, world-class solutions in fast-paced environments.' Good: 'Software engineer with 4 years building backend services and cloud infrastructure in C#/.NET on Azure, with recent work on distributed data pipelines and production LLM systems.' The bad version is seven adjectives and no information. The good version states duration, domain, primary stack, platform and current focus. A recruiter can decide in one read whether the profile matches the role, which is the only job a summary has.",
+      "tags": [
+        "before-after",
+        "summary",
+        "adjectives"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "sen-001",
+      "category": "seniority_rubric",
+      "title": "Junior bullets: scope is a task, evidence is competence",
+      "text": "A junior engineer's bullets are expected to show clean execution of well-defined tasks and evidence of growing independence. Expect verbs like implemented, added, fixed, wrote, tested. Scope is typically a feature, an endpoint, a job or a bug rather than a system. Do not inflate to 'designed' or 'owned'; a junior resume claiming architecture ownership reads as either inaccurate or as a team with no seniors. Strong junior bullet: 'Implemented CSV export for the reporting API, including streaming responses to keep memory flat on large exports.' The specificity of 'streaming responses to keep memory flat' is what marks competence at this level.",
+      "tags": [
+        "junior",
+        "scope",
+        "expectations"
+      ],
+      "seniority": [
+        "junior"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "sen-002",
+      "category": "seniority_rubric",
+      "title": "Mid-level bullets: scope is a component, evidence is ownership",
+      "text": "A mid-level engineer, roughly SDE2 or L4, is expected to own a component or feature end-to-end: design through implementation, deployment, monitoring and on-call. Expect built, designed, migrated, owned, investigated, reduced. The distinguishing signal is end-to-end responsibility and evidence of operating what they built, not just shipping it. Strong mid-level bullet: 'Owned the usage-analytics workflow across ~42K tenants, moving its computation off a shared interactive tier onto non-interactive batch jobs.' The bullet shows a system-level decision, the reason behind it, and ownership of the outcome.",
+      "tags": [
+        "mid",
+        "sde2",
+        "l4",
+        "ownership"
+      ],
+      "seniority": [
+        "mid"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "sen-003",
+      "category": "seniority_rubric",
+      "title": "Senior bullets: scope crosses teams, evidence is influence",
+      "text": "A senior engineer's bullets are expected to show impact beyond their own component: cross-team technical decisions, ambiguity resolved, other engineers unblocked or mentored, and design choices that outlived the immediate project. Expect led, drove, designed, established, influenced, alongside continued hands-on verbs. The failure mode at this level is bullets that read mid-level, describing personal delivery only. Strong senior bullet: 'Led distributed-tracing deep dives across three partner teams and established the sampling and correlation conventions those teams adopted.' The scope is other teams, and the artefact outlasts the investigation.",
+      "tags": [
+        "senior",
+        "influence",
+        "cross-team"
+      ],
+      "seniority": [
+        "senior"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "sen-004",
+      "category": "seniority_rubric",
+      "title": "Do not write above your level",
+      "text": "Writing bullets calibrated to a level above the one actually held is the most common way a strong resume fails. A mid-level engineer whose bullets claim senior-level influence will be interviewed against senior expectations and assessed as a weak senior rather than a strong mid. Compare 'Drove the org's adoption of event-driven architecture' against 'Built the order-events publisher and worked with two consuming teams to agree the schema.' The second is a smaller claim and a far better one, because it is true and the candidate can defend every clause of it. Write accurately for the level held and let technical depth do the differentiating; precisely described mid-level work reads stronger than vaguely described senior work, because vagueness is exactly what reviewers use to detect inflation.",
+      "tags": [
+        "calibration",
+        "inflation",
+        "interview"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "sen-005",
+      "category": "seniority_rubric",
+      "title": "Signals that separate mid from senior in the same work",
+      "text": "The same project can be written at either level, and the difference is what the bullet foregrounds. Mid: what was built and how it works. Senior: what decision was made, what alternatives were rejected, and who else was affected. 'Built a caching layer for the config service' is mid. 'Chose read-through caching over a materialised store for the config service after benchmarking both, trading staleness for a simpler invalidation path the on-call rotation could reason about' is senior, because the bullet contains a trade-off, a rejected alternative and a consideration of other people. Only write the second version if the trade-off analysis actually happened.",
+      "tags": [
+        "mid",
+        "senior",
+        "trade-offs",
+        "calibration"
+      ],
+      "seniority": [
+        "mid",
+        "senior"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "sen-006",
+      "category": "seniority_rubric",
+      "title": "Mentoring and leadership claims at each level",
+      "text": "Leadership claims scale with evidence. Junior: no leadership claim is expected and none should be manufactured; 'onboarded the new team member to the deployment process' is credible and sufficient if true. Mid: mentoring one or two engineers, running code reviews, owning a workstream. Senior: setting technical direction, mentoring several engineers, driving decisions across teams. Never claim to have 'led a team' when the reality was working alongside peers on a shared project. If the strongest honest statement is 'reviewed code and helped two engineers ramp up on the service', write that; it is specific and defensible where 'led engineering efforts' is neither.",
+      "tags": [
+        "leadership",
+        "mentoring",
+        "calibration"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "ver-001",
+      "category": "verification",
+      "title": "The interview follow-up test",
+      "text": "Every significant claim on a resume must survive the question 'tell me exactly how you did that'. The engineer should be able to explain the original problem, their specific role, the implementation, the important technical decisions, the trade-offs, how it was tested, how it was deployed, and what the result was. If they cannot walk through all of these for a given bullet, the bullet is overstated and should be simplified until they can, or removed. This test is the single most useful filter available, because it applies the same standard the interview will apply, before the interview does.",
+      "tags": [
+        "interview",
+        "defensibility",
+        "testing"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    },
+    {
+      "id": "ver-002",
+      "category": "verification",
+      "title": "The adjective-strip test and the job-posting test",
+      "text": "Two fast checks on any finished bullet. First, remove every adjective and adverb. If the sentence still communicates the work, the content was carried by facts. If it collapses, the adjectives were substituting for substance and the bullet needs rewriting around what actually happened. Second, ask whether the sentence could be pasted unchanged into a job posting. If it could, it describes a role rather than a person's delivered work, and it needs to be rewritten around a specific accomplishment. A bullet that passes both checks is usually sound.",
+      "tags": [
+        "testing",
+        "adjectives",
+        "job-description"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "major"
+    },
+    {
+      "id": "ver-003",
+      "category": "verification",
+      "title": "Do not optimise for AI detectors",
+      "text": "Do not deliberately introduce grammatical mistakes, awkward phrasing, fake imperfections, strange punctuation, artificially varied sentence lengths, typos or forced informality in an attempt to appear human. The goal is not to defeat a detector; it is to produce writing that reads as specific, human-authored engineering experience because it actually is specific. Naturalness is a by-product of describing real work accurately, not something to be simulated. A resume full of precise technical detail and honest scoping reads as human because no generator would have had access to those specifics.",
+      "tags": [
+        "ai-detection",
+        "authenticity",
+        "process"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "guidance"
+    },
+    {
+      "id": "ver-004",
+      "category": "verification",
+      "title": "Final ten-point checklist before shipping a bullet",
+      "text": "Check each of the following, and rewrite if any answer is no. Is every claim true? Is the ownership level accurate to what the person actually did? Is every metric defensible on what was measured, how, the baseline, the change and the calculation? Does every technology named have a reason for being in the sentence? Have unnecessary buzzwords been removed? Does the bullet describe actual engineering work rather than a responsibility? Could the engineer explain it technically in an interview? Does it sound like an engineer rather than a marketing department? Is the sentence structure varied relative to its neighbours? Would the sentence still be strong with all adjectives removed?",
+      "tags": [
+        "checklist",
+        "testing",
+        "quality-gate"
+      ],
+      "seniority": [
+        "all"
+      ],
+      "severity": "blocker"
+    }
+  ]
+}
